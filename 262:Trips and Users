@@ -1,0 +1,27 @@
+SELECT X.Request_at AS day, (total_concellations/total_requests) AS Cancellation_Rate
+FROM
+( SELECT t1.Request_at, COUNT(*) AS total_requests FROM 
+   (
+     SELECT Client_Id, Driver_Id, Status, Request_at FROM Trips AS t 
+     JOIN 
+    (SELECT Users_Id FROM Users WHERE Banned='NO') AS u 
+     ON  
+     u.Users_Id = t.Client_Id OR u.Users_Id = t.Driver_Id
+   ) 
+    AS t1
+GROUP BY t1.Request_at 
+Having t1.Request_at BETWEEN '2013-10-01' AND '2013-10-03')
+JOIN 
+ 
+   SELECT t2.Request_at, COUNT(*) AS total_concellations FROM 
+   (
+     SELECT Client_Id, Driver_Id, Status, Request_at FROM Trips AS t0 
+     JOIN 
+    (SELECT Users_Id FROM Users WHERE Banned='NO') AS u0 
+     ON  u0.Users_Id = t0.Client_Id OR u0.Users_Id = t0.Driver_Id
+     WHERE t0.Status!='completed' GROUP BY t0.Request_at 
+   Having t0.Request_at BETWEEN '2013-10-01' AND '2013-10-03'
+  ) AS t2
+ON t1.Request_at = t2.Request_at ) AS X
+GROUP BY X.Request_at
+ORDER BY X.Request_at;
